@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Where Did My Money Go? | AI Expense Leak Detector</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top" id="mainNavbar">
+    <div class="container-xl">
+      <a class="navbar-brand d-flex flex-column" href="#">
+        <span class="brand-title">💰 Where Did My Money Go?</span>
+        <span class="brand-sub">AI Expense Leak Detector</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+        aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarContent">
+        <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-1">
+          <li class="nav-item"><a class="nav-link" href="#dashboard"><i
+                class="bi bi-grid-1x2-fill me-1"></i>Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="#transactions"><i
+                class="bi bi-credit-card-fill me-1"></i>Expenses</a></li>
+          <li class="nav-item"><a class="nav-link" href="#insights"><i
+                class="bi bi-lightbulb-fill me-1"></i>Insights</a></li>
+          <li class="nav-item"><a class="nav-link" href="#savings-plan"><i
+                class="bi bi-piggy-bank-fill me-1"></i>Savings Plan</a></li>
+        </ul>
+        <div class="d-flex gap-2 mt-2 mt-lg-0">
+          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
+            <i class="bi bi-upload me-1"></i>Import CSV
+          </button>
+          <button class="btn btn-analyze btn-sm" onclick="triggerAnalysis()">
+            <i class="bi bi-cpu-fill me-1"></i>Analyze Expenses
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero-section" id="hero">
+    <div class="container-xl">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-6">
+          <div class="badge-pill mb-3"><i class="bi bi-robot me-2"></i>🤖 AI-Powered Expense Analysis</div>
+          <h1 class="hero-heading">Stop Losing Money <span class="text-gradient">Without Realizing It.</span></h1>
+          <p class="hero-sub">AI-powered expense analysis that finds hidden spending leaks, recurring payments and
+            personalized savings opportunities — all in your browser.</p>
+          <div class="d-flex flex-wrap gap-3 mt-4">
+            <button class="btn btn-hero-primary" onclick="triggerAnalysis()">
+              <i class="bi bi-cpu-fill me-2"></i>Analyze My Expenses
+            </button>
+            <button class="btn btn-hero-outline"
+              onclick="document.getElementById('insights').scrollIntoView({behavior:'smooth'})">
+              <i class="bi bi-eye-fill me-2"></i>View Insights
+            </button>
+          </div>
+        </div>
+        <div class="col-lg-6 d-none d-lg-block">
+          <div class="hero-visual">
+            <div class="hv-card hv-card-1">
+              <div class="hv-icon"><i class="bi bi-graph-up-arrow"></i></div>
+              <div>
+                <div class="hv-label">Monthly Savings</div>
+                <div class="hv-val text-success" id="heroSavingsVal">₹3,450</div>
+              </div>
+            </div>
+            <div class="hv-card hv-card-2">
+              <div class="hv-icon hv-danger"><i class="bi bi-exclamation-triangle-fill"></i></div>
+              <div>
+                <div class="hv-label">Leaks Found</div>
+                <div class="hv-val text-danger" id="heroLeaksVal">3 Found</div>
+              </div>
+            </div>
+            <div class="hv-card hv-card-3">
+              <div class="hv-icon hv-indigo"><i class="bi bi-shield-check"></i></div>
+              <div>
+                <div class="hv-label">Health Score</div>
+                <div class="hv-val text-primary" id="heroScoreVal">72/100</div>
+              </div>
+            </div>
+            <div class="hv-card hv-card-4">
+              <div class="hv-icon hv-orange"><i class="bi bi-repeat"></i></div>
+              <div>
+                <div class="hv-label">Recurring</div>
+                <div class="hv-val text-warning" id="heroRecurVal">₹2,066</div>
+              </div>
+            </div>
+            <div class="hv-center-card">
+              <svg viewBox="0 0 120 120" width="110" height="110">
+                <circle cx="60" cy="60" r="48" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8" />
+                <circle cx="60" cy="60" r="48" fill="none" stroke="url(#hg)" stroke-width="8" stroke-linecap="round"
+                  stroke-dasharray="216 301" stroke-dashoffset="-36" />
+                <defs>
+                  <linearGradient id="hg" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#6366f1" />
+                    <stop offset="100%" style="stop-color:#22d3ee" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="hvc-score" id="heroRingScore">72</div>
+              <div class="hvc-label">Health</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOADING OVERLAY -->
+  <div class="loading-overlay d-none" id="loadingOverlay">
+    <div class="loading-box">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Analyzing your spending…</p>
+      <p class="loading-sub">Finding leaks • Detecting patterns • Building your plan</p>
+    </div>
+  </div>
+
+  <!-- SUMMARY CARDS -->
+  <section class="section-gap" id="dashboard">
+    <div class="container-xl">
+      <div class="row g-4">
+        <div class="col-sm-6 col-xl-3">
+          <div class="summary-card income-card">
+            <div class="sc-icon"><i class="bi bi-wallet2"></i></div>
+            <div class="sc-body">
+              <div class="sc-label">Monthly Income</div>
+              <div class="sc-value" id="summaryIncome">₹35,000</div>
+              <div class="sc-sub"><i class="bi bi-arrow-up-circle-fill text-success me-1"></i>Income</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+          <div class="summary-card expense-card">
+            <div class="sc-icon expense-icon"><i class="bi bi-receipt-cutoff"></i></div>
+            <div class="sc-body">
+              <div class="sc-label">Total Expenses</div>
+              <div class="sc-value" id="summaryExpenses">₹24,650</div>
+              <div class="sc-sub"><i class="bi bi-arrow-down-circle-fill text-danger me-1"></i>Expenses</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+          <div class="summary-card savings-card">
+            <div class="sc-icon savings-icon"><i class="bi bi-piggy-bank-fill"></i></div>
+            <div class="sc-body">
+              <div class="sc-label">Potential Savings</div>
+              <div class="sc-value" id="summarySavings">₹3,450</div>
+              <div class="sc-sub"><i class="bi bi-stars me-1 text-success"></i>Savings Opportunity</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+          <div class="summary-card health-card">
+            <div class="sc-icon health-icon"><i class="bi bi-heart-pulse-fill"></i></div>
+            <div class="sc-body">
+              <div class="sc-label">Financial Health</div>
+              <div class="sc-value" id="summaryHealth">72/100</div>
+              <div class="sc-sub"><i class="bi bi-shield-check me-1 text-primary"></i>Health Score</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINANCIAL HEALTH SCORE -->
+  <section class="section-gap bg-alt" id="health">
+    <div class="container-xl">
+      <div class="section-header">
+        <h2 class="section-title"><i class="bi bi-heart-pulse-fill text-danger me-2"></i>Financial Health Score</h2>
+        <p class="section-sub">Calculated from your income, expenses, savings rate and spending patterns.</p>
+      </div>
+      <div class="row g-4 align-items-center">
+        <div class="col-lg-4 text-center">
+          <div class="health-circle-wrap">
+            <svg class="health-svg" viewBox="0 0 200 200">
+              <circle cx="100" cy="100" r="80" fill="none" stroke="#e8eaf6" stroke-width="16" />
+              <circle cx="100" cy="100" r="80" fill="none" stroke="url(#hGrad)" stroke-width="16" stroke-linecap="round"
+                stroke-dasharray="502" stroke-dashoffset="502" id="healthCircle"
+                style="transition:stroke-dashoffset 1.5s ease" />
+              <defs>
+                <linearGradient id="hGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#6366f1" />
+                  <stop offset="100%" style="stop-color:#22d3ee" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <div class="health-score-center">
+              <div class="hs-score" id="healthScore">72</div>
+              <div class="hs-max">/100</div>
+              <div class="hs-status" id="healthStatus">Good</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="health-metrics">
+            <div class="hm-row">
+              <div class="hm-icon text-success"><i class="bi bi-graph-up"></i></div>
+              <div>
+                <div class="hm-label">Savings Rate</div>
+                <div class="hm-val text-success" id="savingsRate">29.5%</div>
+              </div>
+            </div>
+            <div class="hm-row">
+              <div class="hm-icon text-danger"><i class="bi bi-pie-chart-fill"></i></div>
+              <div>
+                <div class="hm-label">Expense Ratio</div>
+                <div class="hm-val text-danger" id="expenseRatio">70.4%</div>
+              </div>
+            </div>
+            <div class="hm-row">
+              <div class="hm-icon text-warning"><i class="bi bi-repeat"></i></div>
+              <div>
+                <div class="hm-label">Recurring Expenses</div>
+                <div class="hm-val text-warning" id="recurringTotal">₹2,066</div>
+              </div>
+            </div>
+            <div class="hm-row">
+              <div class="hm-icon text-primary"><i class="bi bi-stars"></i></div>
+              <div>
+                <div class="hm-label">Potential Savings</div>
+                <div class="hm-val text-primary" id="potentialSavings">₹3,450</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="health-insight-card">
+            <div class="hi-badge"><i class="bi bi-robot me-1"></i>AI Insight</div>
+            <p class="hi-text" id="healthInsightText">Your financial health is good, but recurring subscriptions and
+              food delivery are reducing your savings potential.</p>
+            <div id="healthTips"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI ANALYSIS -->
+  <section class="section-gap" id="insights">
+    <div class="container-xl">
+      <div class="section-header">
+        <h2 class="section-title"><i class="bi bi-robot text-primary me-2"></i>AI Expense Analysis</h2>
+        <p class="section-sub">We analyzed your spending patterns and found these potential leaks.</p>
+      </div>
+      <div class="row g-4" id="aiCards"></div>
+    </div>
+  </section>
+
+  <!-- EXPENSE LEAKS -->
+  <section class="section-gap bg-alt">
+    <div class="container-xl">
+      <div class="section-header">
+        <h2 class="section-title"><i class="bi bi-search text-warning me-2"></i>Where Your Money Is Leaking</h2>
+        <p class="section-sub">Categories with the highest potential for savings based on your spending habits.</p>
+      </div>
+      <div class="row g-4" id="leakCards"></div>
+    </div>
+  </section>
+
+  <!-- RECURRING PAYMENTS -->
+  <section class="section-gap">
+    <div class="container-xl">
+      <div class="section-header">
+        <h2 class="section-title"><i class="bi bi-repeat text-info me-2"></i>Recurring Payments Detected</h2>
+        <p class="section-sub">These payments repeat every month — make sure you're using all of them.</p>
+      </div>
+      <div class="row g-3" id="recurringCards"></div>
+    </div>
+  </section>
+
+  <!-- CHARTS -->
+  <section class="section-gap bg-alt">
+    <div class="container-xl">
+      <div class="section-header">
+        <h2 class="section-title"><i class="bi bi-bar-chart-fill text-primary me-2"></i>Spending Analytics</h2>
+        <p class="section-sub">Visual breakdown of your income, expenses and spending trends.</p>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-5">
+          <div class="chart-card">
+            <div class="chart-card-title">Expense Distribution</div>
+            <div class="chart-wrap"><canvas id="donutChart"></canvas></div>
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="chart-card">
+            <div class="chart-card-title">Monthly Spending Trend</div>
+            <div class="chart-wrap"><canvas id="lineChart"></canvas></div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="chart-card">
+            <div class="chart-card-title">Income vs Expenses</div>
+            <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="chart-card">
+            <div class="chart-card-title">Top Expense Categories</div>
+            <div class="chart-wrap"><canvas id="hbarChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SAVINGS PLAN -->
+  <section class="section-gap" id="savings-plan">
+    <div class="container-xl">
+      <div class="section-header">
+        <h2 class="section-title"><i class="bi bi-bullseye text-success me-2"></i>Your Personalized Savings Plan</h2>
+        <p class="section-sub">Follow these recommendations to unlock your savings potential this month.</p>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-5">
+          <div class="savings-summary-card">
+            <div class="ss-row">
+              <div class="ss-label">Current Expenses</div>
+              <div class="ss-val text-danger" id="spCurrentExp">₹24,650</div>
+            </div>
+            <div class="ss-row">
+              <div class="ss-label">Recommended Expenses</div>
+              <div class="ss-val text-primary" id="spRecommended">₹21,200</div>
+            </div>
+            <div class="ss-divider"></div>
+            <div class="ss-row">
+              <div class="ss-label fw-bold">Potential Monthly Savings</div>
+              <div class="ss-val text-success fw-bold" id="spMonthlySave">₹3,450</div>
+            </div>
+            <div class="ss-row">
+              <div class="ss-label fw-bold">Potential Annual Savings</div>
+              <div class="ss-val text-success fw-bold" id="spAnnualSave">₹41,400</div>
+            </div>
+            <div class="mt-4">
+              <button class="btn btn-success w-100" onclick="showSavingsModal()">
+                <i class="bi bi-download me-2"></i>Get Full Savings Plan
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="savings-bars-card">
+            <h6 class="mb-3 fw-semibold">Savings Breakdown by Category</h6>
+            <div id="savingsBars"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI RECOMMENDATIONS -->
+  <section class="section-gap bg-alt">
+    <div class="container-xl">
+      <div class="section-header">
+        <h2 class="section-title"><i class="bi bi-lightbulb-fill text-warning me-2"></i>AI Recommendations</h2>
+        <p class="section-sub">Personalized advice generated from your actual transaction analysis.</p>
+      </div>
+      <div class="row g-3" id="recommendationCards"></div>
+    </div>
+  </section>
+
+  <!-- TRANSACTIONS -->
+  <section class="section-gap" id="transactions">
+    <div class="container-xl">
+      <div class="section-header">
+        <h2 class="section-title"><i class="bi bi-credit-card-fill text-primary me-2"></i>Recent Transactions</h2>
+      </div>
+      <div class="txn-controls-row">
+        <div class="txn-search-wrap">
+          <i class="bi bi-search txn-search-icon"></i>
+          <input type="text" class="form-control txn-search" id="txnSearch" placeholder="Search merchant or category…"
+            aria-label="Search transactions" oninput="filterTransactions()" />
+        </div>
+        <select class="form-select txn-filter" id="txnCategory" onchange="filterTransactions()"
+          aria-label="Filter by category">
+          <option value="">All Categories</option>
+        </select>
+        <select class="form-select txn-filter" id="txnType" onchange="filterTransactions()" aria-label="Filter by type">
+          <option value="">All Types</option>
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+        </select>
+        <select class="form-select txn-filter" id="txnSort" onchange="filterTransactions()"
+          aria-label="Sort transactions">
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="highest">Highest Amount</option>
+          <option value="lowest">Lowest Amount</option>
+        </select>
+      </div>
+      <div class="table-responsive txn-table-wrap">
+        <table class="table txn-table" aria-label="Transactions table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Merchant</th>
+              <th>Category</th>
+              <th>Amount</th>
+              <th>Type</th>
+              <th>Recurring</th>
+            </tr>
+          </thead>
+          <tbody id="txnTableBody"></tbody>
+        </table>
+      </div>
+      <div class="txn-count" id="txnCount"></div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container-xl">
+      <div class="row align-items-start g-4">
+        <div class="col-lg-4">
+          <div class="footer-brand">💰 Where Did My Money Go?</div>
+          <div class="footer-brand-sub">AI Expense Leak Detector</div>
+          <p class="footer-tagline">"Turn spending data into smarter financial decisions."</p>
+        </div>
+        <div class="col-lg-4">
+          <div class="footer-links-title">Navigation</div>
+          <ul class="footer-links">
+            <li><a href="#dashboard">Dashboard</a></li>
+            <li><a href="#insights">Insights</a></li>
+            <li><a href="#savings-plan">Savings</a></li>
+            <li><a href="#transactions">Transactions</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-4">
+          <div class="footer-links-title">Features</div>
+          <ul class="footer-links">
+            <li><i class="bi bi-check-circle-fill text-success me-1"></i>AI Leak Detection</li>
+            <li><i class="bi bi-check-circle-fill text-success me-1"></i>Recurring Payment Alerts</li>
+            <li><i class="bi bi-check-circle-fill text-success me-1"></i>Personalized Savings Plan</li>
+            <li><i class="bi bi-check-circle-fill text-success me-1"></i>CSV Import Support</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        Built for <strong>Vibe Coding Challenge 2026</strong> &nbsp;•&nbsp; Frontend Only &nbsp;•&nbsp; No Backend
+        &nbsp;•&nbsp; Privacy-First
+      </div>
+    </div>
+  </footer>
+
+  <!-- TOAST -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:9999">
+    <div id="appToast" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive"
+      aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body" id="toastMsg">Done!</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+          aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPORT MODAL -->
+  <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-custom">
+        <div class="modal-header">
+          <h5 class="modal-title" id="importModalLabel"><i class="bi bi-upload me-2"></i>Import Transactions</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted small">Upload a CSV file with columns:
+            <code>date, merchant, category, amount, type, recurring</code></p>
+          <div class="mb-3">
+            <label for="csvFile" class="form-label fw-semibold">Select CSV File</label>
+            <input class="form-control" type="file" id="csvFile" accept=".csv" aria-label="CSV file upload" />
+          </div>
+          <div id="importAlert"></div>
+          <hr />
+          <p class="text-muted small mb-2">Or start with pre-loaded demo data:</p>
+          <button class="btn btn-outline-primary w-100" onclick="loadDemoData()">
+            <i class="bi bi-database-fill me-2"></i>Load Demo Data
+          </button>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="handleCSVUpload()">
+            <i class="bi bi-upload me-2"></i>Import &amp; Analyze
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBSCRIPTION MODAL -->
+  <div class="modal fade" id="subModal" tabindex="-1" aria-labelledby="subModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-custom">
+        <div class="modal-header">
+          <h5 class="modal-title" id="subModalLabel"><i class="bi bi-repeat me-2"></i>Subscription Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="subModalBody"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal"
+            onclick="showToast('Subscription flagged for cancellation review.','danger')">
+            <i class="bi bi-x-circle me-1"></i>Mark for Cancellation
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEAK MODAL -->
+  <div class="modal fade" id="leakModal" tabindex="-1" aria-labelledby="leakModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-custom">
+        <div class="modal-header">
+          <h5 class="modal-title" id="leakModalLabel"><i
+              class="bi bi-exclamation-triangle me-2 text-warning"></i>Expense Leak Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="leakModalBody"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-success" data-bs-dismiss="modal"
+            onclick="showToast('Savings goal added to your plan!','success')">
+            <i class="bi bi-check-circle me-1"></i>Add to Savings Plan
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAVINGS MODAL -->
+  <div class="modal fade" id="savingsModal" tabindex="-1" aria-labelledby="savingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content modal-custom">
+        <div class="modal-header">
+          <h5 class="modal-title" id="savingsModalLabel"><i class="bi bi-bullseye me-2 text-success"></i>Full
+            Personalized Savings Plan</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="savingsModalBody"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="script.js"></script>
+</body>
+
+</html>
